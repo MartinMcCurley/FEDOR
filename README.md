@@ -45,8 +45,5 @@ FEDOR/
 ## Development Status
 Project is currently in initial setup phase.
 
-## License
-[Add your chosen license]
-
 ## Contributors
 Martin McCurley

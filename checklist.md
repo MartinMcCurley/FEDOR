@@ -9,7 +9,7 @@
 
 ### 1.2 Choose Programming Language and Frameworks
 **Programming Language:**
-- Consider Python for its extensive libraries and community support.
+- Python for its extensive libraries and community support.
 
 **Frameworks and Libraries:**
 - GUI: Evaluate PyQt or Tkinter for creating the user interface.
@@ -18,7 +18,7 @@
 
 ### 1.3 Set Up Development Environment
 - **Integrated Development Environment (IDE):**
-  - Install preferred IDE (e.g., PyCharm, Visual Studio Code).
+  - Install preferred IDE (Visual Studio Code).
   
 - **SDKs and Libraries:**
   - Install necessary Python packages via pip or conda.
