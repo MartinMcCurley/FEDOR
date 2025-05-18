@@ -1,0 +1,25 @@
+workspace = { members = ["extern/calc_emd"] }
+[package]
+name = "rust_poker_ai"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+approx = "0.5.1"
+ckmeans = { git = "https://github.com/tanker-fund/rust-ckmeans.git", tag = "v0.2.0" }
+clap = { version = "4.5.2", features = ["derive"] }
+native_emd = { git = "https://github.com/tanker-fund/rust-native-emd.git", tag = "v0.1.2" }
+generator = "0.7.5"
+indicatif = "0.17.7"
+itertools = "0.12.1"
+lazy_static = "1.4"
+ndarray = "0.15.6"
+ndarray-rand = "0.14.0"
+num-traits = "0.2.18"
+rand = "0.8.5"
+rand_xoshiro = "0.6.0"
+rayon = "1.8.1"
+serde = "1.0.196"
+serde_json = "1.0.113"
