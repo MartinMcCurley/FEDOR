@@ -1,0 +1,6 @@
+context,hand_range,action,frequency,eff_stack,source_file
+BTN_RFI_25bb,AA,raise,100,25.0,Upswing-Charts.pdf
+BTN_RFI_25bb,KK,raise,100,25.0,Upswing-Charts.pdf
+BTN_RFI_25bb,QQ,raise,100,25.0,Upswing-Charts.pdf
+BTN_RFI_25bb,AKs,raise,100,25.0,Upswing-Charts.pdf
+BTN_RFI_25bb,AQs,raise,75,25.0,Upswing-Charts.pdf
