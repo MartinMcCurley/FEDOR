@@ -1,123 +1,188 @@
-## **Actionable Research and Development Roadmap for FEDOR**
+## **8\. Sprint Schedule**
 
-Developing FEDOR requires a structured, phased approach, building upon the pluribus-poker-AI foundation and progressively integrating Deep MCCFR components and GPU optimizations.
+The development of FEDOR.ppl is structured into eight one-week sprints, each with specific goals, tasks, deliverables, and definitions of done. This agile approach allows for iterative progress and adaptation.  
+**Table 8.1: Eight-Week Sprint Road-Map**
 
-### **Phase 1: Game Engine Finalization & Baseline MCCFR (Python-first)**
+| Week | Sprint Goal | Key Questions to Answer | Key Tasks | Deliverables (Artefacts) | Definition-of-Done (DoD) | Minimal CI/Local Build Commands |
+| :---- | :---- | :---- | :---- | :---- | :---- | :---- |
+| **1** | **Foundations & Preflop Data Acquisition** | What is the full inventory of relevant public GTO assets (preflop focus)? How complex is parsing? Initial PokerRL/OH setup. | 1\. Setup Git repo, Conda env for PokerRL, OpenHoldem dev env. 2\. Finalize Asset Inventory (Sec 1), focusing on preflop charts & push/fold tables. 3\. Develop parsers (Python) for PDF, HTML, text-based GTO charts. 4\. Convert all identified preflop data into standardized CSV/JSON: (context, hand\_range, action, frequency, eff\_stack). | data/raw\_gto\_charts/preflop/, data/parsed\_gto\_data/preflop\_compiled.csv, src/parsing/, README.md (initial project setup). | All targeted preflop assets parsed & standardized. Dev environments functional. Git repo initialized. | python \-m unittest discover src/parsing/tests |
+| **2** | **Bet Tree Design & Initial Board Abstraction Features** | Finalize recursive bet-tree logic (max raises, SPR\<1 rule). Define comprehensive feature set for board abstraction. | 1\. Formalize bet-tree generation algorithm (Sec 2), including all bet sizes and recursive raise logic. 2\. Research & define feature vector for board states (suits, pairedness, connectivity, high-card tiers) for flop, turn, river (Sec 3). 3\. Implement Python functions to extract these features from canonical board representations. | docs/bet\_tree\_design.md, src/abstraction/board\_features.py, src/abstraction/tests/test\_board\_features.py. | Bet-tree logic documented. Board feature extraction functions implemented and unit tested. | python \-m unittest src/abstraction/tests/test\_board\_features.py |
+| **3** | **Board Abstraction Clustering & VRAM Validation** | What are the optimal k values for flop, turn, river buckets within 11GB VRAM? How good is cluster separation? | 1\. Generate canonical flop list; sample turn/river boards. 2\. Implement K-Means clustering (using scikit-learn) with K-Means++ init. 3\. Run clustering experiments for various k on flop, turn, river using features from Sprint 2\. 4\. Estimate VRAM for SD-CFR with resulting bucket counts and target NN size. Select final k values. 5\. Save k-means models. | data/board\_abstraction\_models/kflop.joblib, kturn.joblib, kriver.joblib. notebooks/board\_abstraction\_analysis.ipynb. Report on k selection and VRAM estimates. | Optimal k values for flop, turn, river selected and models saved. VRAM estimates confirm \<11GB target. | python src/abstraction/run\_clustering.py \--street flop \--k 500 (example) |
+| **4** | **PokerRL SD-CFR Setup & Initial Training Cycle (Small Segment)** | Can PokerRL with SD-CFR be configured for a small NLH segment using custom abstractions? FP16 integration. | 1\. Setup PokerRL TrainingProfile for SD-CFR. 2\. Implement custom PokerRL game environment for a small segment of 5-max NLH (e.g., a specific preflop line, flop only, using 10-20 flop buckets). 3\. Integrate FP16 (autocast, GradScaler) into PokerRL training loop if not native. 4\. Run a short (1-2 day) test training cycle on the RTX 4070 Ti. Monitor convergence, VRAM, speed. | src/mccfr\_training/custom\_game\_env.py, src/mccfr\_training/profiles/test\_profile.py, scripts/run\_poker\_rl\_test.sh. Report on test cycle results. | PokerRL training pipeline functional for a small custom segment with abstractions and FP16. Initial performance metrics gathered. | bash scripts/run\_poker\_rl\_test.sh |
+| **5** | **Full MCCFR Training Cycle 1 (Key Postflop Segment)** | Can a significant postflop segment converge adequately within 7 days? Hyperparameter tuning. | 1\. Select a key, complex postflop segment (e.g., BTN vs BB SRP, using full flop/turn buckets from Sprint 3). 2\. Refine SD-CFR hyperparameters (LR, batch size, network architecture choice like dense\_residual) based on Sprint 4\. 3\. Launch a full 7-day training cycle for this segment. 4\. Monitor convergence (exploitability if measurable, loss curves), VRAM, GPU util. | data/mccfr\_solver\_outputs/segment1\_strategy.json, logs/segment1\_training.log. Report on training cycle 1\. | First major postflop segment trained for 7 days. Strategy output saved. Convergence metrics documented. | bash scripts/train\_segment.sh \--segment\_config configs/segment1.json |
+| **6** | **Strategy Merging, Quantisation & PPL Generation Core** | Develop algorithms for merging chart/solver data and quantising frequencies. Implement core PPL generator. | 1\. Implement merge logic (Sec 5): rules for chart vs. solver precedence, visit count thresholds. 2\. Implement quantisation logic (Sec 5): 70/30 thresholds, handling multiple mixed actions. 3\. Design and implement the Python PPL generator (Sec 6\) to convert (context, hand, action, freq) rows to basic OpenPPL WHEN clauses. Test with preflop data and segment1\_strategy. | src/merging\_quantisation/merge\_tool.py, src/ppl\_generation/ppl\_writer.py. profiles/FEDOR\_preflop\_segment1.txt (sample PPL). | Merge and quantisation algorithms implemented. Core PPL generator creates valid syntax for tested data. | python src/merging\_quantisation/merge\_tool.py..., python src/ppl\_generation/ppl\_writer.py... |
+| **7** | **Helper DLL Development & Full PPL Generation** | Implement and test C++ helper DLL. Generate full FEDOR.txt from all available strategies. | 1\. Implement C++ helper DLL (FEDOR\_Helpers.dll) exposing user\_ variables (Sec 6\) for board buckets, eff\_stack\_cat, spr\_cat, action\_hash. 2\. Unit test DLL functions. Compile DLL. 3\. Integrate DLL variable usage into PPL generator. 4\. Run PPL generator on all parsed charts and all trained MCCFR segments to produce FEDOR.txt. 5\. Implement Perl script for .ppl encryption. Encrypt to FEDOR.ppl. | src/cpp\_dll/FedorHelpers.cpp, src/cpp\_dll/FedorHelpers.dll, profiles/FEDOR.txt, profiles/FEDOR.ppl, scripts/encrypt\_ppl.pl. | Helper DLL compiles and provides correct variables. Full FEDOR.txt and FEDOR.ppl generated. | cd src/cpp\_dll && make && cd../.., python make\_fedor.py \--generate\_ppl \--encrypt\_ppl |
+| **8** | **Simulation, Validation & Final Packaging** | Validate FEDOR.ppl against performance targets. Document and package project. | 1\. Conduct full Simulation & Validation Plan (Sec 7): Oracle H2H (or strategy matching), positional stats, archetype testing, timing tell analysis. 2\. Analyze results, iterate on PPL/DLL if minor fixes needed. 3\. Finalize make\_fedor.py script. 4\. Complete all documentation (README, section reports). 5\. Package all project artefacts for delivery. | Final FEDOR.ppl, FEDOR/ folder structure populated. Validation report (docs/validation\_report.md). Final README.md. | FEDOR.ppl meets or exceeds \-1bb/100 vs oracle. All validation tests passed. Project fully documented and packaged. | python make\_fedor.py \--all, python run\_validation\_suite.py |
 
-The initial phase focuses on establishing a robust game environment and validating the core regret minimization logic with a simpler, tabular MCCFR.
+This sprint schedule is ambitious but achievable given the constraints. The critical path items involve successful board abstraction within VRAM limits (Sprint 3\) and achieving meaningful convergence in MCCFR training cycles (Sprint 4-5). Parallel work on data parsing/PPL generation (Sprints 1, 6\) and DLL development (Sprint 7\) can occur alongside these core solver tasks. Continuous, albeit minimal, integration (compiling, unit testing) is vital for catching errors early.
 
-* **Task 1.1: Extend pluribus-poker-AI Game Engine:**  
-  * **Objective:** Implement comprehensive 6-max NLH game logic.  
-  * **Details:** This involves extending the existing Python game engine in pluribus-poker-AI 6 to fully support all rules of 6-player No-Limit Hold'em. This includes correct handling of preflop, flop, turn, and river betting rounds; accurate pot calculations, especially with multiple raises and re-raises; robust side-pot logic for all-in scenarios involving multiple players with varying stack sizes; and correct determination of winners at showdown. The game state representation must be meticulously designed to capture all necessary information for an agent, and the generation of information sets for each of the six players must be accurate and efficient. OpenSpiel's NLH implementations 24 and RLCard's NLH game logic 23 can serve as references for rule validation and standardized practices.  
-* **Task 1.2: Implement Tabular MCCFR for Small Games:**  
-  * **Objective:** Validate the core CFR traversal and regret update logic.  
-  * **Details:** Before tackling Deep MCCFR, implement a standard tabular MCCFR algorithm. This should initially target simpler poker variants like 2-player Kuhn Poker or Leduc Poker, as suggested in the pluribus-poker-AI roadmap.1 External sampling MCCFR 9 is recommended. Regrets will be stored in Python dictionaries or simple arrays mapping information set strings/hashes to regret arrays. The primary goal is to verify that the MCCFR traversals correctly explore the game tree (as per the sampling scheme) and that regret updates lead to convergence towards a Nash equilibrium. Exploitability calculations for these small games will be feasible and should be used to confirm correctness.
+## **9\. Open Questions & Risk Register**
 
-### **Phase 2: Neural Network Integration & Deep MCCFR Prototype (PyTorch & 4070ti)**
+This section outlines unresolved technical questions and potential risks associated with the FEDOR.ppl project. Proactive identification and mitigation are key to successful completion.  
+**Table 9.1: Open Questions & Risk Register**
 
-This phase transitions from tabular methods to neural network-based function approximation for Deep MCCFR.
+| ID | Type | Description | Potential Impact (Severity/Likelihood) | Proposed Experiment / Mitigation Strategy | Owner | Status |
+| :---- | :---- | :---- | :---- | :---- | :---- | :---- |
+| QN-01 | Question | Optimal SD-CFR hyperparameters (LR, batch size, network architecture details beyond nn\_type) for 5-max short-stack NLH on RTX 4070 Ti with FP16. | Suboptimal convergence speed or final strategy quality. (High/Medium) | Literature review for similar setups. Small-scale hyperparameter sweeps in early training cycles (Sprint 4). Start with values from Deep CFR paper and PokerRL examples , adjust based on VRAM and stability. | MCCFR Lead | Open |
+| RSK-01 | Risk | **VRAM Exhaustion:** Chosen board abstraction buckets (k\_{flop}, k\_{turn}, k\_{river}) \+ NN size \+ batch size exceed 11GB VRAM on RTX 4070 Ti. | Training fails or requires drastically smaller NN/batch, impacting quality/speed. (High/High) | **Mitigation:** Rigorous VRAM estimation in Sprint 3\. Use FP16. Start with conservative k values and NN size, profile memory, and scale up. Prioritize simpler NN architecture if dense\_residual is too large. Reduce batch size as a last resort. Consider techniques like gradient accumulation if batch size becomes too small for stable learning. | Abstraction Lead | Open |
+| RSK-02 | Risk | **MCCFR Convergence Time:** SD-CFR may not converge to a sufficiently low exploitability level for complex game segments within the 7-day training cycle per segment. | Resulting strategy is weak. Project timeline overrun if multiple re-trains needed. (High/Medium) | **Mitigation:** Prioritize dense\_residual NN type. Optimize PokerRL for speed (OMP\_NUM\_THREADS=1 ). Use FP16. Focus training on most impactful game segments. Accept slightly higher exploitability for less critical/frequent spots if time-constrained. Explore DCFR with Hyperparameter Schedules if convergence is a major issue and integration is feasible. | MCCFR Lead | Open |
+| RSK-03 | Risk | **PPL Quantisation EV Loss:** The 70%/30% quantisation thresholds for ALWAYS/RANDOM\_N/NEVER cause significant EV loss compared to the true mixed strategy from MCCFR. | FEDOR.ppl fails to meet \\ge \-1 bb/100 benchmark against oracle. (Medium/Medium) | **Experiment:** During validation (Sprint 8), if EV loss is high, test alternative quantisation schemes (e.g., more RANDOM\_N bins, or rounding to nearest 10% like some commercial tools). **Mitigation:** Ensure MCCFR strategies are well-converged. The current thresholds are user-specified; if problematic, they can be adjusted, though this adds PPL complexity. | PPL Gen Lead | Open |
+| RSK-04 | Risk | **Licence Ambiguity of GTO Assets:** Using data derived from commercial GTO tools (even free snapshots or outputs from custom solves if terms are restrictive) for building FEDOR.ppl, even for offline educational use, might violate terms of service. | Legal issues or inability to share/use the profile as intended. (Low/Medium, given offline/edu context) | **Mitigation:** Prioritize academic sources (Cepheus ), fully open-source GTO charts, or self-generated data. Clearly document sources. If using GTOWizard custom solves, review their ToS for data ownership/usage of *solver outputs*. For "educational purposes," this risk is lower. | Project Lead | Open |
+| RSK-05 | Risk | **Helper DLL Detection (if used online):** While specified for offline use, if any component were ever used online, custom DLLs can be a detection vector for poker site security. | Account suspension on poker sites. (Medium/Low \- for this project's scope) | **Mitigation:** Adhere strictly to offline, educational use. If any online application considered in future, DLL would need extreme caution (e.g., non-invasive memory reading only, or different integration). This is largely out of scope for current project. | N/A (Offline) | Resolved (for current scope) |
+| RSK-06 | Risk | **PokerRL FP16 Integration Issues:** Difficulties in seamlessly integrating PyTorch AMP (autocast, GradScaler) into the PokerRL training loop if not natively supported or if conflicts arise with PokerRL's existing Ray-based parallelism or older PyTorch version dependencies. | Loss of FP16 benefits (speed, VRAM capacity), jeopardizing RSK-01 and RSK-02. (Medium/Medium) | **Experiment:** Test FP16 integration thoroughly in Sprint 4 on a small segment. **Mitigation:** Refer to PyTorch AMP documentation and examples. If PokerRL's PyTorch version (0.4.1 mentioned in some docs ) is too old for native AMP, an upgrade of PyTorch within the PokerRL environment might be needed, which carries its own compatibility risks. The diditforlulz273/PokerRL-Omaha fork might offer insights if it uses a newer PyTorch. | MCCFR Lead | Open |
+| RSK-07 | Risk | **Complexity of Action Sequence Hashing:** Defining a robust and compact hash/ID for previous\_action\_sequence that effectively distinguishes strategic situations without causing excessive PPL rule granularity. | PPL file becomes too large or too complex, or strategically different lines are incorrectly merged. (Medium/Medium) | **Mitigation:** Start with simpler action sequence features (e.g., number of bets, last action type/size). Incrementally add complexity. The DLL should handle this. Analyze frequency of different action sequences to guide hashing strategy. | DLL Lead / PPL Gen Lead | Open |
+| RSK-08 | Risk | **Perl Converter for.ppl Encryption:** Legacy tool, potential compatibility or operational issues in a modern environment. | Inability to encrypt the final FEDOR.txt for Shanky bot use. (Low/Low) | **Mitigation:** Test the Perl converter early (e.g., Sprint 6 or 7 with a sample PPL). Ensure Perl environment is correctly set up. If it fails, seek alternative PPL encryption methods or confirm if Shanky can use unencrypted .txt profiles (unlikely for distribution). | PPL Gen Lead | Open |
 
-* **Task 2.1: Develop PyTorch Neural Networks:**  
-  * **Objective:** Implement the advantage/value network architectures.  
-  * **Details:** Based on the designs outlined in Section 4 (Table 4), implement the advantage network(s) using PyTorch. This will likely be an MLP architecture, potentially incorporating residual connections inspired by PokerRL's FLAT2 22 or the model from dberweger2017.26 Implement the feature engineering pipeline to convert raw game state information (Section 4, Table 3\) into the fixed-length vector input required by these networks.  
-* **Task 2.2: Implement Deep MCCFR (SD-CFR style) Training Loop:**  
-  * **Objective:** Create the core training pipeline for FEDOR.  
-  * **Details:**  
-    1. **Advantage Memory:** Implement memory buffers (e.g., using Python lists with a maximum size or NumPy arrays) to store experience tuples: (info\_set\_vector, sampled\_action\_regrets, iteration\_weight). Employ reservoir sampling 2 to manage buffer capacity.  
-    2. **Training Loop:**  
-       * **Data Generation:** Perform MCCFR traversals (using external sampling) on the 6-max NLH game engine. For each information set encountered by the traverser, calculate the instantaneous counterfactual regrets for all actions.  
-       * **Memory Storage:** Store the (info\_set\_vector, sampled\_action\_regrets, iteration\_weight) tuples in the advantage memory. The iteration\_weight could be the iteration number, as in Linear CFR 2, to give more importance to recent samples.  
-       * **Network Training:** Periodically, sample mini-batches from the advantage memory. Train the PyTorch advantage network by minimizing a weighted Mean Squared Error (MSE) loss between the network's predicted advantages and the sampled regrets from the buffer.2  
-       * **Optimizer:** Use Adam or AdamW \[Loshchilov and Hutter, 2019\] with an appropriate learning rate and potentially a learning rate schedule (e.g., linear decay).  
-    3. **Strategy Generation:**  
-       * **Current Iteration Strategy:** Derive the strategy for the current MCCFR iteration directly from the positive predicted advantages of the *current* advantage network using regret matching.  
-       * **Average Strategy (SD-CFR Style):** The final converged strategy is an average of policies. In an SD-CFR approach 11, this average strategy is implicitly represented by or derived from the historical sequence of advantage network parameters (or their outputs on a representative set of information sets) rather than training a separate explicit average strategy network.  
-* **Task 2.3: Initial Training Runs on 4070ti:**  
-  * **Objective:** Debug the pipeline and test initial learning.  
-  * **Details:** Begin training with small-scale experiments. This could involve using heavily abstracted versions of 6-max NLH (e.g., very few bet sizes, simplified game tree) or a 6-player version of Leduc Poker to ensure the entire pipeline (data generation, memory storage, network training, strategy extraction) functions correctly. Focus on achieving stable loss convergence and verifying basic GPU utilization on the RTX 4070ti, applying the setup principles from Section 5\.
+The single RTX 4070 Ti represents a significant constraint. While 12GB VRAM is decent, modern Deep RL can be memory-hungry. The 7-day training cycle per segment also limits the depth of convergence achievable for any single part of the game tree. This necessitates a modular approach, solving different parts of the game (e.g., specific preflop scenarios leading to different postflop SPRs, then specific flop textures) independently if full-game solves are too slow. This modularity, however, can introduce issues at the seams where different solved components meet, which the merging logic must try to smooth out. The "educational and offline" use context is crucial for mitigating risks associated with using GTO data from various public and semi-public sources.
 
-### **Phase 3: Scaling, Optimization, and Evaluation**
+## **10\. Folder Layout & Rebuild Command**
 
-The final phase focuses on training FEDOR on the full game, optimizing performance, and rigorously evaluating its strength.
+A well-organized project structure and an automated build process are essential for reproducibility and manageability, particularly in an educational context.  
+**Proposed Folder Structure (FEDOR/):**  
+`FEDOR/`  
+`├── data/`  
+`│   ├── raw_gto_charts/             # PDFs, web scrapes, images of GTO charts`  
+`│   │   ├── preflop/`  
+`│   │   └── push_fold/`  
+`│   ├── parsed_gto_data/            # Standardized CSV/JSON from parsing raw_gto_charts`  
+`│   │   ├── preflop_rfi.csv`  
+`│   │   ├── preflop_vs_rfi.csv`  
+`│   │   └── push_fold_sb.csv`  
+`│   ├── board_abstraction_models/   # Saved k-means models and feature scalers`  
+`│   │   ├── flop_kmeans_k500.joblib`  
+`│   │   ├── turn_kmeans_k2500.joblib`  
+`│   │   ├── river_kmeans_k10000.joblib`  
+`│   │   └── board_feature_scaler.joblib`  
+`│   └── mccfr_solver_outputs/       # Raw strategy dumps from PokerRL (JSON/CSV)`  
+`│       ├── segment_btn_vs_bb_srp_flop/`  
+`│       │   └── strategy_epoch_final.json`  
+`│       └──... (other segments)`  
+`├── src/`  
+`│   ├── parsing/                    # Python scripts to parse raw_gto_charts`  
+`│   │   └── parse_gto_wizard_pdf.py`  
+`│   ├── abstraction/                # Python scripts for board abstraction`  
+`│   │   ├── board_feature_extractor.py`  
+`│   │   └── run_board_clustering.py`  
+`│   ├── mccfr_training/             # PokerRL TrainingProfile configs, custom game defs`  
+`│   │   ├── fedor_game_env.py`  
+`│   │   └── training_profiles/`  
+`│   │       └── segment_btn_vs_bb_srp_profile.py`  
+`│   ├── merging_quantisation/       # Python scripts for merging strategies and quantising frequencies`  
+`│   │   └── merge_and_quantise.py`  
+`│   ├── ppl_generation/             # Python script to generate.txt PPL from merged data`  
+`│   │   └── generate_fedor_ppl.py`  
+`│   └── cpp_dll/                    # C++ source for FEDOR_Helpers.dll`  
+`│       ├── FedorHelpers.cpp`  
+`│       ├── FedorHelpers.h`  
+`│       └── Makefile (or build script)`  
+`├── profiles/`  
+`│   ├── FEDOR.txt                   # Intermediate unencrypted OpenPPL profile`  
+`│   └── FEDOR.ppl                   # Final encrypted Shanky profile`  
+`├── notebooks/                      # Jupyter notebooks for analysis, visualization, R&D`  
+`│   ├── 01_preflop_data_analysis.ipynb`  
+`│   └── 02_board_abstraction_eda.ipynb`  
+`├── scripts/                        # Utility scripts, CI scripts, training launchers`  
+`│   ├── run_mccfr_training_cycle.sh`  
+`│   └── encrypt_ppl.pl              # Perl script for PPL encryption`  
+`├── make_fedor.py                   # Master Python build script for the entire pipeline`  
+`├── requirements.txt                # Python dependencies (e.g., PokerRL, scikit-learn, pandas)`  
+`├── Dockerfile                      # Optional: For containerized build/run environment`  
+`└── README.md                       # Project README with setup, build, and usage instructions`
 
-* **Task 3.1: GPU Optimization and Profiling:**  
-  * **Objective:** Maximize training throughput on the RTX 4070ti.  
-  * **Details:** Implement Automatic Mixed Precision (AMP) using torch.cuda.amp and GradScaler to accelerate training and reduce memory footprint.30 Leverage torch.compile (with modes like "reduce-overhead" or "max-autotune") for further speedups.30 Use nvidia-smi and the PyTorch Profiler (torch.profiler) to identify and resolve CPU or GPU bottlenecks, paying close attention to data loading, CPU-GPU transfers, and kernel execution times.  
-* **Task 3.2: Full-Scale 6-Max NLH Training:**  
-  * **Objective:** Train FEDOR on the unabstracted or minimally abstracted version of 6-max NLH.  
-  * **Details:** This will be a computationally intensive process, potentially requiring days or weeks of training on the RTX 4070ti. Careful monitoring of training metrics (loss, regret convergence if measurable indirectly) is essential.  
-* **Task 3.3: Implement Robust Evaluation Methods:**  
-  * **Objective:** Accurately assess FEDOR's performance.  
-  * **Details:** Exact exploitability calculation is intractable for 6-max NLH. Implement approximate evaluation methods:  
-    * **Local Best Response (LBR):** As used in PokerRL 22, LBR provides an estimate of exploitability by computing best responses in subgames or against fixed opponent strategies.  
-    * **RL Best Response (RL-BR):** Train a separate deep reinforcement learning agent (e.g., a DQN) to find the best response against FEDOR's fixed strategy. The performance of this RL-BR agent provides an exploitability estimate.31  
-    * **Head-to-Head (H2H) Play:** Evaluate FEDOR by playing it against other strong open-source poker AIs (if available for 6-max NLH) or against previous iterations of itself. Track metrics like win rate (mbb/hand \- milli-big blinds per hand), showdown winnings, etc.  
-* **Task 3.4: Iterative Refinement and Potential C++ Porting:**  
-  * **Objective:** Continuously improve FEDOR's strategy.  
-  * **Details:** Based on evaluation results and training dynamics, iteratively refine the neural network architecture, feature engineering, and training hyperparameters. If profiling (Task 3.1) reveals persistent CPU bottlenecks in Python code that significantly hinder GPU utilization (e.g., in the MCCFR traversal logic or state updates), consider porting these specific, performance-critical modules to C++ and creating Python bindings (as discussed in Section 2.2).
+**Key Artefacts for Rebuild:**
 
-This phased development approach is essential for managing the inherent complexity of building a sophisticated AI system like FEDOR. Attempting to construct the full-scale, highly optimized system from the outset would be fraught with risk. Each phase builds upon the validated successes of the previous one, allowing for incremental development, testing, and refinement. This iterative cycle is standard in large-scale AI research and software engineering.
+* **Raw Data:** All original GTO chart files, PDF documents, web page saves.  
+* **Parsing Scripts:** Python scripts to convert raw data into a structured format.  
+* **Board Abstraction:** Python scripts for feature engineering and k-means clustering; saved k-means model files (.joblib).  
+* **MCCFR Training:** PokerRL TrainingProfile configurations, any custom PokerRL game environment Python files, and the final trained neural network weights/strategy files from PokerRL.  
+* **Merging & Quantisation Scripts:** Python scripts implementing the logic from Section 5\.  
+* **PPL Generation Script:** Python script to convert merged/quantised data into FEDOR.txt.  
+* **C++ DLL Source:** All .cpp and .h files for FEDOR\_Helpers.dll.  
+* **Build/Encryption Scripts:** make\_fedor.py, encrypt\_ppl.pl, and any Makefiles.
 
-A critical consideration, especially for N-player games like 6-max NLH, is the difficulty of evaluation. Unlike two-player zero-sum games where direct exploitability is a clear and often computable measure of strength, assessing an N-player strategy is far more complex. The computational cost of finding a true best response against a 6-player strategy profile is prohibitive. This necessitates reliance on approximate methods like LBR or RL-BR, as employed by frameworks such as PokerRL 31, and empirical evaluations through head-to-head play. The development and refinement of these approximate evaluation techniques are, therefore, as crucial as the development of the AI agent itself, as they are the primary means by which progress and strategic nuances can be measured.
+**Master Rebuild Command (make\_fedor.py):** A single Python script, make\_fedor.py, will orchestrate the entire build process. This script will use Python's subprocess module to call other scripts and tools. It should support incremental builds (i.e., only re-running steps whose inputs have changed, if feasible, though a full rebuild is acceptable for simplicity).  
+**Signature and Behavior:** python make\_fedor.py \[options\]  
+**Options:**
 
-**Table 5: FEDOR Development Roadmap Milestones and Key Tasks**
+* \--all: (Default) Perform all steps from parsing raw data to generating the final encrypted FEDOR.ppl.  
+* \--parse\_gto: Only run the GTO chart parsing stage.  
+* \--run\_abstraction: Only run the board abstraction (feature extraction and clustering) stage. Requires parsed GTO data if used for defining game segments.  
+* \--train\_mccfr \[--segment \<segment\_name\>\]\[--force\_retrain\]: Run MCCFR training. Can specify a segment or train all defined segments. \--force\_retrain ignores existing solver outputs.  
+* \--merge\_strategies: Run the strategy merging and quantisation stage. Requires parsed GTO data and MCCFR outputs.  
+* \--generate\_ppl\_txt: Generate the unencrypted FEDOR.txt. Requires merged strategies.  
+* \--compile\_dll: Compile FEDOR\_Helpers.dll. Requires C++ source.  
+* \--encrypt\_ppl: Encrypt FEDOR.txt to FEDOR.ppl. Requires FEDOR.txt and encrypt\_ppl.pl.  
+* \--clean: Remove all generated intermediate files and outputs, leaving only source files and raw data.  
+* \--config \<config\_file.json\>: Specify a configuration file for paths, parameters, etc.
 
-| Phase | Milestone | Key Tasks | Estimated Effort | Relevant Open-Source/Snippets |
-| :---- | :---- | :---- | :---- | :---- |
-| **1** | **6-Max NLH Engine Complete** | Extend pluribus-poker-AI for full 6-max NLH rules, state/info set generation. | Medium-Large | pluribus-poker-AI 6, OpenSpiel NLH 35, RLCard NLH 23 |
-| **1** | **Tabular MCCFR Validated** | Implement tabular external sampling MCCFR for Kuhn/Leduc poker; verify convergence. | Medium | pluribus-poker-AI roadmap 1, MCCFR theory 9 |
-| **2** | **PyTorch NN & Feature Eng. Implemented** | Develop advantage NNs (Table 4\) and feature vector (Table 3\) in PyTorch. | Medium | PokerRL NNs 22, dberweger2017 model 26, RLCard features 23 |
-| **2** | **Deep MCCFR (SD-CFR) Training Loop Operational** | Implement advantage memory, training loop (data gen, NN training, SD-CFR style strategy). | Large | Deep CFR 2, SD-CFR 11, dberweger2017 trainer 33 |
-| **2** | **Initial Small-Scale Training Debugged** | Conduct training on abstracted 6-max NLH or Leduc 6P; verify loss convergence, basic GPU use. | Medium | PyTorch docs 30 |
-| **3** | **GPU Optimizations Applied** | Implement AMP, torch.compile; Profile and resolve CPU/GPU bottlenecks. | Medium | PyTorch AMP/compile 30, nvidia-smi |
-| **3** | **Full-Scale 6-Max NLH Training Initiated** | Scale training to full (or near-full) 6-max NLH on 4070ti. | Large (Ongoing) | \- |
-| **3** | **Robust Evaluation Suite Implemented** | Develop LBR, RL-BR, and H2H evaluation frameworks. | Medium-Large | PokerRL evaluation 22 |
-| **3** | **Iterative Refinement & C++ Porting (If Needed)** | Continuously tune based on evaluations; Port Python bottlenecks to C++ if identified. | Ongoing | Profiling tools, Pybind11 |
+**Example make\_fedor.py Structure (Conceptual):**  
+`import subprocess`  
+`import os`  
+`import argparse`
 
-## **Leveraging Open-Source Libraries and Tools**
+`# Define paths to scripts, data, models, etc. (ideally from a config file)`
 
-The development of FEDOR will extensively utilize and adapt code from several key open-source projects. This strategy accelerates progress by building on proven components.
+`def run_command(command_list):`  
+    `print(f"Executing: {' '.join(command_list)}")`  
+    `process = subprocess.Popen(command_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)`  
+    `stdout, stderr = process.communicate()`  
+    `if process.returncode!= 0:`  
+        `print(f"Error running command: {' '.join(command_list)}")`  
+        `print(f"STDOUT: {stdout.decode()}")`  
+        `print(f"STDERR: {stderr.decode()}")`  
+        `raise Exception("Command failed")`  
+    `print(stdout.decode())`
 
-* **pluribus-poker-AI** 4**:** This repository will serve as the **primary codebase** for FEDOR. Its Python structure 6 for game logic (pluribus/games/poker\_game.py), poker utilities (pluribus/poker/), and AI stubs (pluribus/ai/) will be adapted and extended for 6-max NLH and Deep MCCFR as detailed in Table 1\.  
-* **PokerRL** 11**:**  
-  * **Neural Network Architectures:** PokerRL's PyTorch neural network modules, such as MainPokerModuleFLAT and the optimized MainPokerModuleFLAT2 (a deeper residual network using Leaky ReLU from the PokerRL-Omaha fork 22), and feedforward networks from DeepCFR examples 28, are strong candidates for FEDOR's advantage networks.  
-  * **Observation Encoding:** While specific NoLimitHoldem encoder files were not directly accessible in the provided search results 36, the general concepts for input representation in PokerRL, particularly the preflop hand bucketing for Hold'em and the CNN input structure from the PLO fork (vector of stacks and bets) 22, will inform FEDOR's feature engineering.  
-  * **Evaluation Tools:** Methodologies for Local Best Response (LBR), RL Best Response (RL-BR), and Head-to-Head (H2H) play detailed in PokerRL 22 will be adapted for evaluating FEDOR.  
-  * **Distributed Training (Future Reference):** PokerRL's integration with Ray for distributed computing 31 provides a valuable blueprint if FEDOR's training needs to scale beyond a single machine.  
-* **OpenSpiel** 7**:**  
-  * **Game Logic Validation:** OpenSpiel's implementations of poker variants like Kuhn Poker and Leduc Poker 24 can be used to cross-validate the game engine developed from pluribus-poker-AI. If a robust 6-max NLH game is available in OpenSpiel, it can also serve as a reference.  
-  * **Information State Representation:** The concept and structure of OpenSpiel's information\_state\_tensor() 24, which provides a flat vector representation of a player's knowledge, will influence the design of FEDOR's input feature vector.  
-  * **Deep CFR Implementations:** OpenSpiel contains examples of Deep CFR in both TensorFlow 39 and PyTorch.41 These implementations, particularly their replay buffer mechanisms (e.g., reservoir sampling) and network designs, offer algorithmic insights, even if FEDOR uses a custom PyTorch implementation.  
-* **dberweger2017/deepcfr-texas-no-limit-holdem-6-players** 13**:** This repository is a **critical and highly relevant resource** as it specifically implements Deep CFR for 6-player NLH using PyTorch.  
-  * **Feature Engineering:** Its feature\_utils.py (or equivalent) 43 will provide direct examples of card encoding and betting history representation for 6-max NLH.  
-  * **PyTorch Model:** The model.py file 44 contains the neural network architecture used, which is invaluable.  
-  * **Training Loop:** The CFRtrainer.py 33 details the experience replay, loss functions, optimizer, and stabilization techniques employed.  
-  * The accompanying Medium article 19 offers high-level explanations of these components.  
-* **PyPoks** 34**:**  
-  * **DRL Concepts:** While FEDOR focuses on Deep MCCFR, PyPoks' implementations of Policy Gradient, Actor-Critic, and PPO in PyTorch for poker 34 can offer general insights into deep reinforcement learning for this domain.  
-  * **Parallel Processing:** Its approach to asynchronous self-play using multiprocessing and multi-GPU support 34 can inform the design of an efficient data generation pipeline for FEDOR, even on a single powerful GPU like the 4070ti (by maximizing CPU core utilization for traversals).
+`def parse_gto_data():`  
+    `print("--- Parsing GTO Charts ---")`  
+    `# run_command(["python", "src/parsing/parse_all_charts.py", "--output_dir", "data/parsed_gto_data"])`
 
-The successful development of advanced AI systems like FEDOR is often accelerated by building upon the collective knowledge and efforts encapsulated in open-source projects. Frameworks such as PokerRL and OpenSpiel provide well-tested modules and algorithmic blueprints, while specific project implementations like dberweger2017/deepcfr-texas-no-limit-holdem-6-players offer solutions tailored to the exact problem domain (6-max NLH Deep CFR). This "standing on the shoulders of giants" approach allows the FEDOR project to bypass redundant foundational work and focus on targeted enhancements and novel contributions.
+`def run_board_abstraction():`  
+    `print("--- Running Board Abstraction ---")`  
+    `# run_command(["python", "src/abstraction/run_board_clustering.py", "--output_dir", "data/board_abstraction_models"])`
 
-Furthermore, no single existing framework may perfectly align with all of FEDOR's specific requirements (6-max NLH, Deep MCCFR with an SD-CFR philosophy, PyTorch, and optimization for a specific GPU). Thus, a strategy of judiciously selecting and integrating the most relevant components and ideas from each—for instance, using pluribus-poker-AI as the base game engine, adapting neural network architectures from PokerRL or dberweger2017, drawing on OpenSpiel for standardized game concepts and information state representations, and learning from PyPoks' parallel processing techniques—is likely to yield the most robust and performant system. This cross-pollination of ideas is a hallmark of dynamic research and development environments.
+`def train_mccfr_segment(segment_name):`  
+    `print(f"--- Training MCCFR Segment: {segment_name} ---")`  
+    `# script_path = "scripts/run_mccfr_training_cycle.sh"`  
+    `# config_path = f"src/mccfr_training/training_profiles/{segment_name}_profile.py" # Or a JSON/YAML config`  
+    `# run_command(["bash", script_path, "--segment_config", config_path]) # Pass relevant args`
 
-## **Conclusion and Future Directions**
+`def merge_quantise_strategies():`  
+    `print("--- Merging and Quantising Strategies ---")`  
+    `# run_command(["python", "src/merging_quantisation/merge_and_quantise.py",...])`
 
-### **Summary of Proposed Path for FEDOR**
+`def generate_ppl_txt():`  
+    `print("--- Generating FEDOR.txt ---")`  
+    `# run_command(["python", "src/ppl_generation/generate_fedor_ppl.py",...])`
 
-The development of FEDOR, a Deep Monte Carlo CFR agent for 6-max No-Limit Hold'em, will proceed by enhancing the tanker-fund/pluribus-poker-AI repository. The core AI algorithm will be a Deep MCCFR implemented in a style similar to Single Deep CFR (SD-CFR), utilizing PyTorch-based neural networks to approximate advantage values from data generated via external sampling. Feature engineering will focus on creating a comprehensive information state vector for 6-max NLH, drawing inspiration from successful projects like dberweger2017/deepcfr-texas-no-limit-holdem-6-players and frameworks like PokerRL and OpenSpiel. Training will be optimized for an NVIDIA RTX 4070ti using techniques such as Automatic Mixed Precision and torch.compile. The development will follow a phased roadmap, starting with game engine completion and tabular MCCFR, progressing to a Deep MCCFR prototype, and culminating in scaled-up training, rigorous evaluation, and iterative refinement.
+`def compile_dll():`  
+    `print("--- Compiling FEDOR_Helpers.dll ---")`  
+    `# original_dir = os.getcwd()`  
+    `# os.chdir("src/cpp_dll")`  
+    `# run_command(["make"]) # Assuming a Makefile exists`  
+    `# os.chdir(original_dir)`
 
-### **Potential Advanced Research Avenues**
+`def encrypt_ppl():`  
+    `print("--- Encrypting FEDOR.ppl ---")`  
+    `# run_command()`
 
-Once a strong baseline FEDOR agent is established, several advanced research directions can be pursued to further enhance its capabilities:
+`if __name__ == "__main__":`  
+    `parser = argparse.ArgumentParser(description="FEDOR.ppl Build Script")`  
+    `# Add arguments as defined above`  
+    `#...`  
+    `args = parser.parse_args()`
 
-* **Advanced Action and State Abstraction:** While Deep MCCFR aims to learn without explicit abstraction, the sheer scale of 6-max NLH might still benefit from more sophisticated, potentially learnable, abstraction techniques. Research into methods like RL-CFR, which dynamically learns action abstractions 46, could reduce the computational burden or improve generalization.  
-* **Incorporating Ideas from ReBeL and DREAM:**  
-  * **Public Belief States (ReBeL):** For more nuanced opponent modeling, especially in a 6-player dynamic, exploring the integration of Public Belief States (PBS) 18 into the Deep MCCFR framework could be a long-term goal. This would involve training value/advantage networks that operate on these belief states, a significant architectural evolution.  
-  * **Model-Free Learning and Variance Reduction (DREAM):** While FEDOR's MCCFR is model-based, the variance reduction techniques from model-free algorithms like DREAM 14, particularly its use of learned advantage baselines, could be adapted to further stabilize and accelerate the training of Deep MCCFR's neural networks.  
-* **Automated Hyperparameter Optimization:** The performance of deep learning models is highly sensitive to hyperparameters. Employing systematic hyperparameter optimization tools like Optuna (related context in 47) for tuning neural network architectures, learning rates, buffer sizes, and other training parameters could lead to significant performance gains.  
-* **Multi-Agent Training Dynamics and Curriculum Learning:** Training in a 6-player self-play environment presents unique challenges in terms of non-stationarity and convergence. Investigating more sophisticated opponent selection strategies during self-play, or employing curriculum learning (starting with simpler versions of the game or weaker opponents and gradually increasing complexity) could improve training stability and final performance.  
-* **Explainability and Strategy Analysis:** Developing tools and techniques to interpret FEDOR's learned strategies is crucial for understanding its decision-making process, identifying potential biases or weaknesses, and building trust in its capabilities. Visualizing action probabilities in key situations, or analyzing network activations, could provide insights. PokerRL's PokerViz tool for visualizing strategies in tiny games 31 is a rudimentary example; more advanced methods would be needed for 6-max NLH.  
-* **Exploration of Alternative Neural Architectures:** While MLPs are standard, continued exploration of architectures like Graph Neural Networks (GNNs) for relational reasoning over game elements (players, cards, betting actions) or Transformer models for processing sequential betting information could yield breakthroughs.
+    `if args.all or args.parse_gto:`  
+        `parse_gto_data()`  
+    `if args.all or args.run_abstraction:`  
+        `run_board_abstraction()`  
+    `#... and so on for other steps, handling dependencies implicitly by order or explicitly`  
+    `# For MCCFR training, might iterate over defined segments`  
+    `# if args.all or args.train_mccfr:`  
+    `#     for segment in ["segment1", "segment2"]: # Defined elsewhere`  
+    `#         train_mccfr_segment(segment)`  
+    `#...`  
+    `print("Build process finished.")`
 
-The development of FEDOR represents a challenging but rewarding endeavor at the intersection of game theory, deep learning, and high-performance computing. By systematically leveraging existing open-source resources and focusing on principled algorithmic enhancements and practical implementation strategies, it is feasible to create a formidable 6-max No-Limit Hold'em AI. The outlined future research directions offer pathways to push the boundaries of AI performance in complex multi-agent imperfect information games even further.
+This structure ensures that the entire process, from raw data to the final encrypted profile, is automated and reproducible. The make\_fedor.py script serves as the single point of entry for building FEDOR.ppl, which is crucial for verifying the methodology and for any future iterations or modifications. Storing large intermediate files like MCCFR reservoir samples or numerous neural network checkpoints needs careful consideration for disk space; the .gitignore file should be configured to exclude these if they are easily reproducible by the build script. The primary goal is reproducibility of the *final* FEDOR.ppl from the core source code and initial raw data.  
+This comprehensive plan addresses all tasks outlined in the user query, providing a clear path toward the development of the FEDOR.ppl profile.
