@@ -1,6 +1,6 @@
-# **Design and Implementation of FEDOR.ppl: A Solver-Based Shanky Profile for 5-Max No-Limit Texas Hold’em (2-30bb)**
+# **Design and Implementation of FEDOR.ppl: A Solver-Based Shanky Profile for 5-Max No-Limit Texas Hold'em (2-30bb)**
 
-**Executive Summary** This report outlines a comprehensive methodology for developing FEDOR.ppl, a production-ready, solver-based Shanky/OpenHoldem profile for 5-max No-Limit Texas Hold’em, optimized for effective stack depths of 2 bb to 30 bb. The project leverages credible public GTO resources, including charts, push/fold tables, and existing profile fragments. Where GTO coverage is lacking, new strategies will be generated using Deep Monte Carlo Counterfactual Regret Minimization (MCCFR) or Single Deep CFR (SD-CFR) via the PokerRL framework, targeting convergence on a single NVIDIA RTX 4070 Ti (12 GB VRAM) within a 7-day training cycle per segment. A rich bet-sizing menu (1/3P, 1/2P, 2/3P, P, 2P, jam) will be modeled, with unlimited re-raises handled recursively until the stack-to-pot ratio (SPR) is less than 1\. Board abstraction techniques will be employed to manage VRAM usage, aiming for peak GPU memory below 11 GB. The final profile will convert probabilistic solver outputs into deterministic OpenPPL logic, utilizing custom C/C++ helper DLLs for enhanced functionality. The project is structured into eight weekly sprints, culminating in a validated FEDOR.ppl profile demonstrating near-oracle level performance (≥ \-1 bb/100 vs. the MCCFR oracle over 1 million hands). Key deliverables include a detailed asset inventory, bet-tree design, board abstraction research, MCCFR training protocols, merge/quantisation algorithms, code generation blueprints, a validation plan, and a complete project roadmap with risk assessment.
+**Executive Summary** This report outlines a comprehensive methodology for developing FEDOR.ppl, a production-ready, solver-based Shanky/OpenHoldem profile for 5-max No-Limit Texas Hold'em, optimized for effective stack depths of 2 bb to 30 bb. The project leverages credible public GTO resources, including charts, push/fold tables, and existing profile fragments. Where GTO coverage is lacking, new strategies will be generated using Deep Monte Carlo Counterfactual Regret Minimization (MCCFR) or Single Deep CFR (SD-CFR) via the PokerRL framework, targeting convergence on a single NVIDIA RTX 4070 Ti (12 GB VRAM) within a 7-day training cycle per segment. A rich bet-sizing menu (1/3P, 1/2P, 2/3P, P, 2P, jam) will be modeled, with unlimited re-raises handled recursively until the stack-to-pot ratio (SPR) is less than 1\. Board abstraction techniques will be employed to manage VRAM usage, aiming for peak GPU memory below 11 GB. The final profile will convert probabilistic solver outputs into deterministic OpenPPL logic, utilizing custom C/C++ helper DLLs for enhanced functionality. The project is structured into eight weekly sprints, culminating in a validated FEDOR.ppl profile demonstrating near-oracle level performance (≥ \-1 bb/100 vs. the MCCFR oracle over 1 million hands). Key deliverables include a detailed asset inventory, bet-tree design, board abstraction research, MCCFR training protocols, merge/quantisation algorithms, code generation blueprints, a validation plan, and a complete project roadmap with risk assessment.
 
 ## **1\. Asset Inventory**
 
@@ -220,35 +220,35 @@ The Deep Monte Carlo Counterfactual Regret Minimization (MCCFR) training, specif
 `# Set OMP_NUM_THREADS=1 if using older PyTorch that has issues with Ray`  
 `export OMP_NUM_THREADS=1`
 
-`# --- Run PokerRL Training Script ---`  
-``# This assumes a main Python script `run_poker_rl_training.py` that accepts these as args``  
-`python run_poker_rl_training.py \`  
-    `--training_profile_name "$TRAINING_PROFILE_NAME" \`  
-    `--game_name "$GAME_NAME" \`  
-    `--game_module_id "$GAME_MODULE" \`  
-    `--nn_type "$NN_TYPE" \`  
-    `--max_buffer_size_adv "$MAX_BUFFER_SIZE_ADV" \`  
-    `--n_traversals_per_iter "$N_TRAVERSALS_PER_ITER" \`  
-    `--n_batches_adv_training "$N_BATCHES_ADV_TRAINING" \`  
-    `--batch_size_adv_per_la "$BATCH_SIZE_ADV_PER_LA" \`  
-    `--lr_adv "$LR_ADV" \`  
-    `--use_fp16 "$USE_FP16" \`  
-    `--max_train_time_seconds "$MAX_TRAIN_TIME_SECONDS" \`  
-    `--exploitability_target_mbbh "$EXPLOITABILITY_TARGET_MBBH" \`  
-    `--eff_stack_bb_min "$EFFECTIVE_STACK_BB_MIN" \`  
-    `--eff_stack_bb_max "$EFFECTIVE_STACK_BB_MAX" \`  
-    `--preflop_ranges_oop "$PREFLOP_RANGES_OOP" \`  
-    `--preflop_ranges_ip "$PREFLOP_RANGES_IP" \`  
-    `--board_abstraction_flop "$BOARD_ABSTRACTION_FLOP" \`  
-    `--output_strategy_path "$OUTPUT_STRATEGY_PATH" \`  
-    `--log_dir "$LOG_DIR" \`  
-    `# Potentially --num_players 5 for 5-max setup in PokerRL game class`  
+`# --- Run PokerRL Training Script ---`
+`# This assumes a main Python script \`run_poker_rl_training.py\` that accepts these as args`
+`python run_poker_rl_training.py \\`
+    `--training_profile_name "$TRAINING_PROFILE_NAME" \\`
+    `--game_name "$GAME_NAME" \\`
+    `--game_module_id "$GAME_MODULE" \\`
+    `--nn_type "$NN_TYPE" \\`
+    `--max_buffer_size_adv "$MAX_BUFFER_SIZE_ADV" \\`
+    `--n_traversals_per_iter "$N_TRAVERSALS_PER_ITER" \\`
+    `--n_batches_adv_training "$N_BATCHES_ADV_TRAINING" \\`
+    `--batch_size_adv_per_la "$BATCH_SIZE_ADV_PER_LA" \\`
+    `--lr_adv "$LR_ADV" \\`
+    `--use_fp16 "$USE_FP16" \\`
+    `--max_train_time_seconds "$MAX_TRAIN_TIME_SECONDS" \\`
+    `--exploitability_target_mbbh "$EXPLOITABILITY_TARGET_MBBH" \\`
+    `--eff_stack_bb_min "$EFFECTIVE_STACK_BB_MIN" \\`
+    `--eff_stack_bb_max "$EFFECTIVE_STACK_BB_MAX" \\`
+    `--preflop_ranges_oop "$PREFLOP_RANGES_OOP" \\`
+    `--preflop_ranges_ip "$PREFLOP_RANGES_IP" \\`
+    `--board_abstraction_flop "$BOARD_ABSTRACTION_FLOP" \\`
+    `--output_strategy_path "$OUTPUT_STRATEGY_PATH" \\`
+    `--log_dir "$LOG_DIR" \\`
+    `# Potentially --num_players 5 for 5-max setup in PokerRL game class`
     `# PokerRL's game_cls might take dicts for bet_sizes, stack_depths etc.`
 
 `echo "Training for segment ${GAME_MODULE} complete or stopped."`  
 `echo "Strategy saved to: ${OUTPUT_STRATEGY_PATH}"`
 
-This script template is illustrative. The actual run\_poker\_rl\_training.py would need to be developed to interface with PokerRL's Driver and TrainingProfile, and to set up the custom game environment based on the segment being trained (e.g., specific starting ranges from preflop charts, specific board abstraction model). The 7-day training limit per cycle necessitates careful selection of game segments; it's unlikely the entire 5-max 2-30bb game can be solved monolithically to high precision. Instead, key strategic situations (e.g., BTN RFI \-\> BB Call \-\> Flop play with X buckets) will be solved.  
+This script template is illustrative. The actual \`run_poker_rl_training.py\` would need to be developed to interface with PokerRL's Driver and TrainingProfile, and to set up the custom game environment based on the segment being trained (e.g., specific starting ranges from preflop charts, specific board abstraction model). The 7-day training limit per cycle necessitates careful selection of game segments; it's unlikely the entire 5-max 2-30bb game can be solved monolithically to high precision. Instead, key strategic situations (e.g., BTN RFI \\-> BB Call \\-> Flop play with X buckets) will be solved.  
 The choice of SD-CFR over Deep CFR is motivated by its reported lower approximation error, more efficient training by not requiring an average strategy network, and better empirical performance in poker. This aligns well with the VRAM and time constraints. The use of FP16 is critical for maximizing batch sizes and network depth on the RTX 4070 Ti, potentially offering significant speedups and memory savings.
 
 ## **5\. Merge & Quantisation Algorithm**
@@ -343,119 +343,4 @@ A Python script will process these rows, grouped by street and then by common co
             `# For multiple random actions for the SAME hand, need careful ordering and cumulative random`  
             `# This example assumes one random action or a sequence of them properly ordered.`  
             `rand_val = int(row.play_type.split("_")) # e.g. RANDOM_65 -> 65`  
-            `# If multiple random actions for same hand:`  
-            `# prev_threshold = get_previous_cumulative_threshold_for_hand(row.hero_hand_range_id)`  
-            `# current_threshold = prev_threshold + rand_val`  
-            `# ppl_lines.append(f"  WHEN {hand_cond} AND random > {prev_threshold} AND random <= {current_threshold} {action_str} FORCE")`  
-            `# update_cumulative_threshold_for_hand(row.hero_hand_range_id, current_threshold)`  
-            `# For simplicity here, assume rand_val is the direct threshold for this specific line`  
-            `ppl_lines.append(f"  WHEN {hand_cond} AND random <= {rand_val} {action_str} FORCE")`
-
-    `ppl_lines.append("  WHEN Others Fold FORCE") # Default action for the context`  
-    `ppl_lines.append("WHEN Others Fold FORCE") # Default action for the street`  
-    `return "\n".join(ppl_lines)`
-
-`def format_action(action_enum, size_frac_pot):`  
-    `if action_enum == Action.Fold: return "Fold"`  
-    `if action_enum == Action.Check: return "Check" # Or Call if bet to call`  
-    `if action_enum == Action.Call: return "Call"`  
-    `# AmountToCall, PotSize are OpenHoldem built-ins`  
-    `# Need to map size_frac_pot to OpenHoldem actions like BetPot, BetValue X, RaisePot, RaiseValue X, Allin`  
-    `if action_enum == Action.Bet:`  
-        `if size_frac_pot == -1: return "Allin" # Shanky specific might be RaiseMax or similar`  
-        `# Map fractions to BetPot, BetHalfPot, etc. or use BetValue`  
-        `# e.g. if size_frac_pot == 1.0: return "BetPot"`  
-        `return f"BetValue {int(size_frac_pot * 100)}%Pot" # Placeholder, actual syntax varies`  
-    `if action_enum == Action.Raise:`  
-        `if size_frac_pot == -1: return "Allin"`  
-        `return f"RaiseValue {int(size_frac_pot * 100)}%Pot" # Placeholder`  
-    `return "Fold" # Default fallback`
-
-The PPL generator must handle the ordering of WHEN clauses carefully, as OpenPPL evaluates them sequentially. More specific conditions (e.g., for a particular hand) should generally precede more general ones (e.g., WHEN Others). The use of open-ended WHEN conditions can group common criteria, reducing redundancy and file size.  
-**Helper DLL Interface (FEDOR\_Helpers.dll):** The DLL will expose custom variables to OpenPPL via the dll$... symbol mechanism. OpenHoldem communicates with the DLL by calling its exported process\_message function.
-
-* **double process\_message(const char\* pmessage, const void\* param):**  
-  * If pmessage is "state": param is a pointer to OpenHoldem's game state structure. The DLL should cast this, parse it, calculate all derived features (board bucket, SPR category, etc.), and store them internally.  
-  * If pmessage is "query": param is a const char\* being the symbol name (e.g., "dll$board\_bucket\_id"). The DLL returns the pre-calculated value as a double.  
-  * "load" / "unload" messages for initialization/cleanup.
-
-**Table 6.1: Helper DLL user\_ Variable Definitions**
-
-| user\_ Variable Name (in PPL) | DLL Calculation Logic (Conceptual) | Returned Value (double) | OpenHoldem Symbols Used by DLL (Partial) |
-| :---- | :---- | :---- | :---- |
-| dll$board\_bucket\_id\_flop | On "state" message: if street is Flop, get fcommon1, fcommon2, fcommon3. Compute board features (pairedness, suits, connectivity, high\_card). Apply k-means model for flop (loaded on DLL load) to get bucket ID. Store ID. On query, return stored ID. | Integer ID (0 to k\_{flop}-1) | fcommon1...fcommon3, betround |
-| dll$board\_bucket\_id\_turn | Similar for Turn, using fcommon1...fturn. Apply turn k-means model. | Integer ID (0 to k\_{turn}-1) | fcommon1...fturn, betround |
-| dll$board\_bucket\_id\_river | Similar for River, using fcommon1...friver. Apply river k-means model. | Integer ID (0 to k\_{river}-1) | fcommon1...friver, betround |
-| dll$eff\_stack\_cat | Get f$effstack (effective stack in chips), bigblind. Calculate eff\_bb \= f$effstack / bigblind. Map eff\_bb to predefined categories (e.g., 1 for 2-5bb, 2 for 6-10bb,...). | Integer category ID | f$effstack, bigblind |
-| dll$spr\_cat | Get f$effstack, potomnipre (pot at start of street). Calculate spr \= f$effstack / potomnipre. Map SPR to predefined categories (e.g., 1 for \<1, 2 for 1-2,...). | Integer category ID | f$effstack, potomnipre (or current pot) |
-| dll$action\_seq\_hash | On "state" message: track betting actions (bet sizes, raise sizes, calls, checks) on current street. Generate a hash or compact ID for this sequence. Store hash. On query, return stored hash. | Integer hash/ID | betround, player actions, bet amounts |
-| dll$hero\_pos\_encoded | Map hero's position (myposition) to a numerical ID (e.g., BTN=0, SB=1, BB=2, CO=3, MP=4, UTG=5 for 5-max). | Integer ID | myposition, nplayersplaying |
-| dll$is\_rfi\_opp | Boolean: Is it a raise-first-in opportunity for hero? (no limpers, no raisers before hero). | 0.0 (false) or 1.0 (true) | nlimpers, nraisers |
-| dll$facing\_rfi\_pos | If hero is facing an RFI, what is the RFIer's position? (Encoded numerically). Returns \-1 if not facing RFI. | Integer ID or \-1.0 | nraisers, player\_actions |
-
-**Compilation of FEDOR\_Helpers.dll:** The DLL will be written in C++. A standard compiler like MinGW g++ (for Windows compatibility with OpenHoldem) or MSVC can be used. Example compile command (MinGW): g++ \-shared \-o FEDOR\_Helpers.dll FedorHelpers.cpp FedorBoardAbstraction.cpp \-std=c++17 \-O2 \-Wall (Assuming FedorBoardAbstraction.cpp contains k-means model loading and prediction logic).  
-The DLL significantly enhances the capabilities of the PPL profile by offloading complex computations. Calculating board bucket IDs, which involves feature extraction and potentially a k-means prediction, is far too intensive for OpenPPL scripting but trivial for compiled C++. Similarly, precisely categorizing effective stack sizes and SPR, or creating a robust hash of the action sequence, is better handled by the DLL. This design keeps the PPL relatively clean, focusing on WHEN conditions based on these high-level DLL-provided variables. The 5MB PPL size limit, while generous, still benefits from this abstraction, as complex logic in PPL would lead to more verbose code.
-
-## **7\. Simulation & Validation Plan**
-
-A rigorous simulation and validation plan is essential to ensure FEDOR.ppl meets its performance objectives and is strategically sound. The primary success criterion is achieving a winrate of \\ge \-1 bb/100 hands against the MCCFR oracle over a 1 million-hand simulation.  
-**EV Benchmarks:**
-
-1. **Head-to-Head (H2H) against MCCFR Oracle:**  
-   * **Objective:** Directly measure the EV loss due to PPL conversion, quantisation, and DLL integration.  
-   * **Method:**  
-     * If PokerRL can be configured to play against an external bot via a simple text-based API (or if OpenHoldem can call an external process for decisions), FEDOR.ppl (running in OpenHoldem) will play against the Python-based SD-CFR agent using the final trained neural networks.  
-     * Alternatively, if direct H2H is too complex, a "strategy matching" approach can be used:  
-       1. Generate a large dataset of game states (e.g., 100,000+) by having the MCCFR oracle play against itself.  
-       2. For each decision point in this dataset, record the MCCFR oracle's action probabilities.  
-       3. Simulate FEDOR.ppl playing through these same game states and record its chosen action.  
-       4. Calculate the Kullback-Leibler (KL) divergence or mean squared error between FEDOR.ppl's action distribution (which is deterministic or simply randomised based on WHEN random) and the MCCFR oracle's true mixed strategy for each common infoset. While not a direct EV measure, high divergence indicates significant strategy deviation.  
-   * **Metric:** Winrate in bb/100 hands.  
-   * **Target:** \\ge \-1.0 bb/100 over \\ge 1,000,000 hands.  
-   * **Tools:** OpenHoldem, PokerRL, custom simulation/interfacing scripts. This benchmark directly addresses the primary success criterion. A \-1 bb/100 margin (equivalent to \-10 mbb/100) is a stringent test of the PPL's fidelity to the solver's strategy, as GTO solutions often aim for exploitability below 100 mbb/100.  
-2. **Positional VPIP/PFR Checks:**  
-   * **Objective:** Ensure FEDOR.ppl's fundamental preflop and postflop aggression frequencies are reasonable and align with GTO principles.  
-   * **Method:** Run FEDOR.ppl in self-play mode (or against copies of itself) in OpenHoldem for \\ge 1,000,000 hands. Log VPIP (Voluntarily Put Money In Pot), PFR (Pre-Flop Raise), 3-Bet%, Fold to 3-Bet%, C-Bet% (Flop, Turn, River), Fold to C-Bet% for each of the 5 positions.  
-   * **Comparison Baselines:**  
-     * Aggregate statistics from the source GTO charts used for preflop.  
-     * Aggregate statistics from the MCCFR solver's internal self-play simulations during training.  
-     * Publicly available GTO baseline statistics for 5-max short-stack NLH, if such data exists for comparable parameters.  
-   * **Metric:** Comparison of FEDOR.ppl's positional stats against baselines. Deviations should be explainable (e.g., due to specific quantisation effects or if MCCFR found a different optimal approach).  
-   * **Tools:** OpenHoldem with logging, database software (e.g., PostgreSQL, SQLite) and analysis scripts (Python/R) for processing hand histories.  
-3. **Exploitability Testing (Approximate):**  
-   * **Objective:** Identify potential gross strategic leaks against non-GTO opponents. True exploitability calculation against a PPL bot is very difficult.  
-   * **Method:**  
-     * Develop or obtain simple, archetype-based PPL profiles for:  
-       * *Nit*: Plays extremely tight, only value bets strong hands, folds easily to aggression.  
-       * *LAG (Loose-Aggressive)*: Plays many hands aggressively, bluffs frequently.  
-       * *Calling Station*: Plays passively, calls frequently with weak/medium hands, rarely folds.  
-     * Play FEDOR.ppl against each archetype for \\ge 100,000 hands in OpenHoldem.  
-   * **Metric:** Winrate against each archetype. FEDOR.ppl should demonstrate a clear positive winrate against the Calling Station and Nit, and hold its own or be slightly positive against a generic LAG (though a highly optimized LAG could be challenging). Look for any unexpected systematic losses.  
-   * **Tools:** OpenHoldem, archetype PPL profiles.
-
-**Timing-Tell Mitigation Tests:**
-
-* **Objective:** Ensure the use of WaitForRandom(min\_ms, max\_ms) for mixed strategies in OpenPPL does not introduce significant EV loss or predictable timing patterns.  
-* **Method:**  
-  1. Identify key PPL sections where WHEN random \<= n is used for mixed strategies.  
-  2. Implement WaitForRandom(T\_min, T\_max) calls associated with these random decisions. Start with small, consistent delays (e.g., T\_min=50ms, T\_max=150ms).  
-  3. Run H2H simulations (e.g., FEDOR.ppl vs. a version without WaitForRandom, or FEDOR.ppl self-play) logging decision times and EV.  
-* **Metrics:**  
-  * EV difference between versions with and without WaitForRandom (should be negligible).  
-  * Distribution of decision times for actions chosen via random clauses. The distribution should not allow an adversary to infer the likelihood of one mixed action over another based purely on decision time. For example, if betting is chosen 70% of the time and checking 30%, the decision time distribution for betting should not be starkly different from checking if both are subject to the same WaitForRandom call.  
-* **Tools:** OpenHoldem, hand history loggers with timing information, statistical analysis scripts. The use of WaitForRandom is a practical measure for masking decision frequencies, but its parameters must be chosen to balance security with playability (hands per hour).
-
-**Table 7.1: Validation Test Suite and Benchmarks**
-
-| Test ID | Test Description | Metric(s) | Target/Benchmark | Tools/Environment | Success Criteria |
-| :---- | :---- | :---- | :---- | :---- | :---- |
-| VAL-01 | Oracle H2H | Winrate (bb/100) | \\ge \-1.0 bb/100 vs MCCFR Oracle | OpenHoldem, PokerRL (or compatible engine), 1M+ hands | Meets winrate target. |
-| VAL-02 | Positional Stats | VPIP, PFR, 3B%, F3B%, CB%, FCB% per position | Consistent with source GTO charts & MCCFR solver stats. | OpenHoldem (self-play 1M+ hands), HH DB, Analysis Scripts | Deviations \<5-10% from baseline or explainable. |
-| VAL-03 | Archetype Test \- Nit | Winrate (bb/100) | Clearly positive EV. | OpenHoldem, Nit PPL, 100k+ hands | Winrate \> 5 bb/100 (example). |
-| VAL-04 | Archetype Test \- LAG | Winrate (bb/100) | Non-negative or slightly positive EV. | OpenHoldem, LAG PPL, 100k+ hands | Winrate \> \-2 bb/100 (example). |
-| VAL-05 | Archetype Test \- Calling Station | Winrate (bb/100) | Clearly positive EV. | OpenHoldem, Calling Station PPL, 100k+ hands | Winrate \> 10 bb/100 (example). |
-| VAL-06 | Timing Tell \- EV Impact | EV difference (bb/100) | \< 0.1 bb/100 difference with/without WaitForRandom. | OpenHoldem (self-play), HH Logger | Negligible EV impact. |
-| VAL-07 | Timing Tell \- Distribution | Decision time distributions | No obvious correlation between decision time and specific mixed action chosen. | OpenHoldem, HH Logger, Stat. Analysis | Time distributions for mixed actions appear indistinguishable. |
-
-This validation plan provides a multi-faceted approach to verifying FEDOR.ppl's quality, from direct GTO comparison to practical robustness against different play styles and security against timing analysis. The \-1 bb/100 target against the MCCFR oracle is particularly important as it quantifies the information loss from abstraction, solver convergence limitations, and PPL quantisation.
-
+            `
