@@ -21,8 +21,12 @@ def get_package_description() -> str:
 
 def get_requirements() -> List[str]:
     """Returns all requirements for this package."""
-    with open('requirements.txt') as f:
-        requirements = f.read().splitlines()
+    try:
+        with open('requirements_compatible.txt') as f:
+            requirements = f.read().splitlines()
+    except FileNotFoundError:
+        with open('requirements.txt') as f:
+            requirements = f.read().splitlines()
     return requirements
 
 

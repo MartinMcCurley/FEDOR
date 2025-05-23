@@ -1,0 +1,198 @@
+custom
+
+preflop
+
+// PREMIUM PAIRS - Maximum aggression with position/stack adjustments
+when (hand = AA or hand = KK) and raises = 0 and stacksize >= 50 raisemax force
+when (hand = AA or hand = KK) and raises = 0 and stacksize < 50 raise 4 force
+when (hand = AA or hand = KK) and raises >= 1 and amounttocall < stacksize / 3 raisemax force
+when (hand = AA or hand = KK) and raises >= 1 and amounttocall >= stacksize / 3 and maxcurrentopponentstacksize >= stacksize call force
+
+when hand = QQ and raises = 0 and position = last raise 4 force
+when hand = QQ and raises = 0 and position != last raise 3 force
+when hand = QQ and raises = 1 and amounttocall <= 12 and firstraiserposition >= 3 raisemax force
+when hand = QQ and raises = 1 and amounttocall <= 8 call force
+when hand = QQ and raises >= 2 and amounttocall <= 15 and stacksize >= 40 call force
+
+// HIGH PAIRS - Position and opponent dependent
+when (hand = JJ or hand = TT) and raises = 0 and position = last and stilltoact <= 2 raise 3 force
+when (hand = JJ or hand = TT) and raises = 0 and position = first and opponents >= 4 call force
+when (hand = JJ or hand = TT) and raises = 1 and firstraiserposition <= 2 and amounttocall <= 6 call force
+when (hand = JJ or hand = TT) and raises = 1 and firstraiserposition >= 4 and amounttocall <= 10 raisemax force
+
+// MEDIUM PAIRS - Set mining with implied odds
+when (hand = 99 or hand = 88 or hand = 77) and raises = 0 and opponents >= 3 and maxcurrentopponentstacksize >= 20 call force
+when (hand = 99 or hand = 88 or hand = 77) and raises = 1 and amounttocall <= 6 and opponents >= 2 and maxcurrentopponentstacksize >= amounttocall * 10 call force
+when (hand = 99 or hand = 88 or hand = 77) and raises = 0 and position = last and opponents <= 2 raise 2 force
+
+// SMALL PAIRS - Strict set mining requirements
+when (hand = 66 or hand = 55 or hand = 44 or hand = 33 or hand = 22) and amounttocall <= 5 and opponents >= 2 and maxcurrentopponentstacksize >= amounttocall * 15 call force
+
+// PREMIUM SUITED - Range advantage and position
+when hand = AK suited and raises = 0 and position = last raise 4 force
+when hand = AK suited and raises = 0 and position != last raise 3 force
+when hand = AK suited and raises = 1 and amounttocall <= 15 raisemax force
+when hand = AK suited and raises >= 2 and amounttocall <= 25 and stacksize >= 40 call force
+
+when (hand = AQ suited or hand = AJ suited) and raises = 0 and position = last and stilltoact <= 3 raise 3 force
+when (hand = AQ suited or hand = AJ suited) and raises = 1 and firstraiserposition >= 3 and amounttocall <= 8 call force
+when (hand = AT suited or hand = A9 suited) and raises = 0 and position = last and stilltoact <= 2 raise 2 force
+
+// SUITED CONNECTORS - Multiway and position dependent
+when (hand = KQ suited or hand = KJ suited or hand = QJ suited) and raises = 0 and position = last raise 2 force
+when (hand = KQ suited or hand = KJ suited or hand = QJ suited) and raises = 1 and amounttocall <= 6 and opponents >= 2 call force
+
+when (hand = JT suited or hand = T9 suited or hand = 98 suited) and raises = 0 and opponents >= 3 call force
+when (hand = JT suited or hand = T9 suited or hand = 98 suited) and raises = 1 and amounttocall <= 4 and opponents >= 3 call force
+when (hand = 87 suited or hand = 76 suited or hand = 65 suited) and raises = 0 and opponents >= 4 and position != first call force
+
+// OFFSUIT BROADWAYS - Position and opponent count sensitive
+when hand = AK and raises = 0 raise 3 force
+when hand = AK and raises = 1 and amounttocall <= 12 raisemax force
+when hand = AK and raises >= 2 and amounttocall <= 20 call force
+
+when (hand = AQ or hand = AJ) and raises = 0 and position = last and stilltoact <= 3 raise 2 force
+when (hand = AQ or hand = AJ) and raises = 1 and firstraiserposition >= 4 and amounttocall <= 6 call force
+
+when (hand = KQ or hand = KJ or hand = QJ) and raises = 0 and position = last and stilltoact <= 2 raise 2 force
+when (hand = KT or hand = QT or hand = JT) and raises = 0 and position = last and stilltoact = 1 and random <= 60 raise 2 force
+
+// POSITIONAL STEALS AND DEFENSES
+when position = last and raises = 0 and stilltoact <= 2 and random <= 40 raise 2 force
+when position = first and raises = 1 and lastcallerposition = 0 and amounttocall <= 3 and random <= 30 call force
+
+flop
+
+// MONSTER HANDS - Maximum value extraction
+when (haveset or havestraight or haveflush or havefullhouse) and not flushpossible and not straightpossible raisemax force
+when (haveset or havestraight or haveflush) and (flushpossible or straightpossible) and bets = 0 bet force
+when (haveset or havestraight or haveflush) and bets >= 1 and not paironboard raisemax force
+when haveset and paironboard and bets >= 1 and amounttocall <= 20 call force
+
+// TWO PAIR AND TRIPS - Board texture dependent
+when havetwopair and not paironboard and not (flushpossible and straightpossible) raisemax force
+when havetwopair and (paironboard or (flushpossible and straightpossible)) and bets = 0 bet force
+when havetwopair and bets >= 1 and amounttocall <= 15 call force
+
+when havetrips and not paironboard bet force
+when havetrips and paironboard and bets >= 1 and amounttocall <= 25 call force
+
+// TOP PAIR - Advanced board reading
+when havetoppair and havebest ki cker and not (flushpossible or straightpossible) and bets = 0 bet force
+when havetoppair and not (flushpossible or straightpossible) and opponents = 1 and bets >= 1 and amounttocall <= 12 call force
+when havetoppair and (flushpossible or straightpossible) and bets = 0 and position = last and opponents <= 2 bet force
+when havetoppair and (flushpossible or straightpossible) and bets >= 1 and amounttocall <= 8 and opponents = 1 call force
+
+when havetoppair and uncoordinatedflop and bets = 0 bet force
+when havetoppair and (acepresentonflop or kingpresentonflop) and not havetoppair and bets >= 1 and amounttocall >= 10 fold force
+
+// OVERPAIRS - Protection and value betting
+when haveoverpair and not (flushpossible or straightpossible) bet force
+when haveoverpair and (flushpossible or straightpossible) and bets = 0 and opponents <= 2 bet force
+when haveoverpair and bets >= 1 and amounttocall <= 15 call force
+when have2ndoverpair and bets >= 1 and amounttocall <= 10 and opponents = 1 call force
+
+// FLUSH DRAWS - Equity and aggression
+when havenutflushdraw and bets = 0 bet force
+when havenutflushdraw and bets >= 1 and amounttocall <= 15 call force
+when havenutflushdraw and position = last and bets = 0 and opponents >= 2 bet force
+
+when have2ndnutflushdraw and bets >= 1 and amounttocall <= 12 and opponents >= 2 call force
+when haveflushdraw and bets >= 1 and amounttocall <= 8 and opponents >= 2 call force
+
+// STRAIGHT DRAWS - Board texture sensitive
+when havenutstraightdraw and not flushpossible and bets = 0 bet force
+when havenutstraightdraw and bets >= 1 and amounttocall <= 12 call force
+when havestraightdraw and not flushpossible and bets >= 1 and amounttocall <= 8 and opponents >= 2 call force
+when haveinsidestraightdraw and bets >= 1 and amounttocall <= 4 and opponents >= 3 call force
+
+// COMBO DRAWS - Premium equity
+when havenutflushdraw and havestraightdraw raisemax force
+when haveflushdraw and havestraightdraw and bets >= 1 and amounttocall <= 20 call force
+when havenutflushdraw and haveinsidestraightdraw and bets >= 1 and amounttocall <= 18 call force
+
+// BACKDOOR AND BLUFFING - Position and opponents
+when havebackdoornutflushdraw and position = last and bets = 0 and opponents <= 2 bet force
+when havebackdoorflushdraw and overcards = 2 and position = last and bets = 0 and opponents = 1 bet force
+
+when overcards = 2 and position = last and bets = 0 and opponents = 1 and uncoordinatedflop bet force
+when position = last and bets = 0 and opponents = 1 and random <= 25 bet force
+
+// WEAK HANDS - Disciplined folding
+when havenothing and bets >= 1 and amounttocall >= 5 fold force
+when havepair and not havetoppair and bets >= 1 and amounttocall >= 10 and (flushpossible or straightpossible) fold force
+
+turn
+
+// MADE HANDS - Turn value betting
+when (haveset or havestraight or haveflush or havefullhouse) raisemax force
+when havetwopair and not paironboard and not flushpossible raisemax force
+when havetwopair and (paironboard or flushpossible) and bets = 0 bet force
+when havetwopair and bets >= 1 and amounttocall <= 20 call force
+
+// TOP PAIR - Turn protection and value
+when hadetoppairon flop and havetoppair and not (flushpossible or straightpossible) and bets = 0 bet force
+when hadetoppairon flop and havetoppair and bets >= 1 and amounttocall <= 10 and opponents = 1 call force
+when hadetoppairon flop and not havetoppair and bets >= 1 and amounttocall >= 8 fold force
+
+// OVERPAIRS - Turn evaluation
+when hadeoverpair onflop and haveoverpair and not (flushpossible or straightpossible) bet force
+when haveoverpair and bets >= 1 and amounttocall <= 15 and not paironboard call force
+when haveoverpair and paironboard and bets >= 1 and amounttocall >= 12 fold force
+
+// DRAWS - Turn equity calculations
+when havenutflushdraw and bets >= 1 and amounttocall <= 12 call force
+when haveflushdraw and bets >= 1 and amounttocall <= 8 and opponents >= 2 call force
+when havenutstraightdraw and bets >= 1 and amounttocall <= 10 call force
+when havestraightdraw and bets >= 1 and amounttocall <= 6 and opponents >= 2 call force
+
+// COMBO DRAWS - Turn aggression
+when havenutflushdraw and havestraightdraw and bets = 0 raisemax force
+when haveflushdraw and havestraightdraw and bets >= 1 and amounttocall <= 18 call force
+
+// BOARD PAIR - Strength adjustments
+when paironboard and not havefullhouse and not havequads and bets >= 1 and amounttocall >= 15 fold force
+when topflopcardpairedonturn and not havetoppair and bets >= 1 and amounttocall >= 8 fold force
+
+// BLUFFS - Selective turn aggression
+when position = last and bets = 0 and opponents = 1 and random <= 20 bet force
+when havenothing and bets >= 1 and amounttocall >= 8 fold force
+
+river
+
+// VALUE HANDS - River value extraction
+when (haveset or havestraight or haveflush or havefullhouse or havequads) raisemax force
+when havetwopair and not paironboard raisemax force
+when havetwopair and paironboard and bets = 0 bet force
+when havetwopair and bets >= 1 and amounttocall <= 30 call force
+
+// TOP PAIR - River showdown decisions
+when hadtoppairon flop and hadtoppairon turn and havetoppair and not paironboard and bets = 0 and opponents = 1 bet force
+when havetoppair and bets >= 1 and amounttocall <= 15 and opponents = 1 call force
+when havetoppair and bets >= 1 and amounttocall >= 20 and opponents >= 2 fold force
+
+// OVERPAIRS - River value decisions
+when hadeoverpairon flop and haveoverpair and bets = 0 and opponents = 1 bet force
+when haveoverpair and bets >= 1 and amounttocall <= 20 and opponents = 1 call force
+when haveoverpair and bets >= 1 and amounttocall >= 25 and opponents >= 2 fold force
+
+// MEDIUM STRENGTH - Bluff catching
+when have2ndtoppair and bets >= 1 and amounttocall <= 12 and opponents = 1 call force
+when have3rdtoppair and bets >= 1 and amounttocall <= 8 and opponents = 1 call force
+when havebottompair and bets >= 1 and amounttocall <= 5 and opponents = 1 and random <= 40 call force
+
+// BLUFFS - River representation
+when position = last and bets = 0 and opponents = 1 and flushpossible and random <= 35 bet force
+when position = last and bets = 0 and opponents = 1 and straightpossible and random <= 30 bet force
+when position = last and bets = 0 and opponents = 1 and paironboard and random <= 25 bet force
+
+when rivercardisovercardto board and position = last and bets = 0 and opponents = 1 and random <= 20 bet force
+
+// HISTORICAL ANALYSIS - Multi-street reads
+when hadtoppairon flop and not hadetoppairon turn and not havetoppair and bets >= 1 and amounttocall >= 10 fold force
+when numberofraisesonflop >= 1 and raisesonturn and bets >= 1 and not (haveset or havestraight or haveflush) fold force
+
+// DEFENSIVE - Protection against draws
+when havenothing and bets >= 1 fold force
+when havepair and not havetoppair and bets >= 1 and amounttocall >= 15 fold force
+when overcards = 0 and bets >= 1 and amounttocall >= 10 fold force

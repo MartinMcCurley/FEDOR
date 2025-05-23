@@ -230,8 +230,9 @@ class CardInfoLutBuilder(CardCombos):
         end = time.time()
         log.info(f"Finished computation of turn clusters - took {end - start} seconds.")
 
-        ehs_sm.close()
-        ehs_sm.unlink()
+        if ehs_sm is not None:
+            ehs_sm.close()
+            ehs_sm.unlink()
 
         return self.create_card_lookup(self._turn_clusters, self.turn)
 
@@ -260,8 +261,9 @@ class CardInfoLutBuilder(CardCombos):
         end = time.time()
         log.info(f"Finished computation of flop clusters - took {end - start} seconds.")
 
-        ehs_sm.close()
-        ehs_sm.unlink()
+        if ehs_sm is not None:
+            ehs_sm.close()
+            ehs_sm.unlink()
 
         return self.create_card_lookup(self._flop_clusters, self.flop)
 

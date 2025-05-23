@@ -1,0 +1,70 @@
+custom
+
+preflop
+when (hand = AA or hand = KK or hand = QQ) and raises = 0 raisemax force
+when (hand = AA or hand = KK) and raises >= 1 and amounttocall <= 20 raisemax force
+when hand = QQ and raises >= 1 and amounttocall <= 10 call force
+when (hand = JJ or hand = TT) and raises = 0 and position = last raise 3 force
+when (hand = JJ or hand = TT) and raises = 0 and position = first raise 2 force
+when (hand = JJ or hand = TT) and raises = 1 and amounttocall <= 8 call force
+when (hand = 99 or hand = 88 or hand = 77) and raises = 0 and opponents <= 3 raise 2 force
+when (hand = 99 or hand = 88 or hand = 77) and raises = 0 and opponents >= 4 call force
+when (hand = 99 or hand = 88 or hand = 77) and raises >= 1 and amounttocall <= 4 call force
+when (hand = 66 or hand = 55 or hand = 44 or hand = 33 or hand = 22) and amounttocall <= 5 and opponents >= 2 call force
+when hand = AK suited and raises = 0 raise 3 force
+when hand = AK suited and raises >= 1 and amounttocall <= 15 raisemax force
+when (hand = AQ suited or hand = AJ suited) and raises = 0 and position = last raise 3 force
+when (hand = AQ suited or hand = AJ suited) and raises = 1 and amounttocall <= 6 call force
+when (hand = JT suited or hand = T9 suited or hand = 98 suited) and raises = 0 and opponents >= 3 call force
+when (hand = JT suited or hand = T9 suited) and raises = 0 and position = last raise 2 force
+when hand = AK and raises = 0 raise 3 force
+when hand = AK and raises = 1 and amounttocall <= 10 call force
+when (hand = AQ or hand = AJ) and raises = 0 and position = last raise 2 force
+when (hand = KQ or hand = KJ) and raises = 0 and position = last and opponents <= 2 raise 2 force
+
+flop
+when haveset and not (flushpossible or straightpossible) raisemax force
+when haveset and (flushpossible or straightpossible) and bets = 0 bet force
+when haveset and (flushpossible or straightpossible) and bets >= 1 call force
+when havetwopair and not paironboard and not (flushpossible or straightpossible) raisemax force
+when havetwopair and (paironboard or flushpossible or straightpossible) bet force
+when havetoppair and not (paironboard or flushpossible or straightpossible) and opponents <= 2 bet force
+when havetoppair and (flushpossible or straightpossible) and bets = 0 and opponents = 1 bet force
+when havetoppair and bets >= 1 and amounttocall <= 10 call force
+when haveoverpair and not (paironboard or flushpossible or straightpossible) bet force
+when haveoverpair and (flushpossible or straightpossible) and bets >= 1 and amounttocall <= 15 call force
+when havenutflushdraw and bets = 0 bet force
+when havenutflushdraw and bets >= 1 and amounttocall <= 15 call force
+when haveflushdraw and bets >= 1 and amounttocall <= 8 and opponents >= 2 call force
+when havenutstraightdraw and bets = 0 and not flushpossible bet force
+when havestraightdraw and bets >= 1 and amounttocall <= 10 and opponents >= 2 call force
+when havenutflushdraw and havestraightdraw raisemax force
+when haveflushdraw and havestraightdraw and bets >= 1 and amounttocall <= 20 call force
+when havebackdoorflushdraw and position = last and bets = 0 and opponents <= 2 bet force
+when overcards = 2 and position = last and bets = 0 and opponents = 1 bet force
+
+turn
+when haveset raisemax force
+when havetwopair and not paironboard bet force
+when havestraight and not (flushpossible or paironboard) raisemax force
+when haveflush and not paironboard raisemax force
+when havetoppair and not (paironboard or flushpossible or straightpossible) bet force
+when haveoverpair and bets >= 1 and amounttocall <= 20 call force
+when havenutflushdraw and bets >= 1 and amounttocall <= 12 call force
+when haveflushdraw and bets >= 1 and amounttocall <= 8 and opponents >= 2 call force
+when havenutstraightdraw and bets >= 1 and amounttocall <= 10 call force
+when havetoppair and haveflushdraw and bets = 0 bet force
+when haveoverpair and havestraightdraw and bets = 0 bet force
+
+river
+when haveset or havestraight or haveflush or havefullhouse raisemax force
+when havetwopair and not paironboard bet force
+when havetoppair and not paironboard and opponents = 1 bet force
+when haveoverpair and opponents = 1 bet force
+when havetoppair and bets >= 1 and amounttocall <= 15 and opponents = 1 call force
+when haveoverpair and bets >= 1 and amounttocall <= 25 call force
+when havetwopair and bets >= 1 and amounttocall <= 40 call force
+when position = last and bets = 0 and opponents = 1 and random <= 30 bet force
+when overcards = 2 and position = last and bets = 0 and opponents = 1 and random <= 20 bet force
+when havepair and bets >= 1 and amounttocall >= 20 fold force
+when havenothing and bets >= 1 fold force

@@ -1,0 +1,78 @@
+{
+  "structure": {
+    "type": "dict",
+    "size": 4,
+    "keys": [
+      "strategy",
+      "regret",
+      "timestep",
+      "pre_flop_strategy"
+    ],
+    "strategy_info": {
+      "type": "dict",
+      "num_info_sets": 5
+    },
+    "sample_info_sets": [
+      {
+        "info_set": "preflop_AKs_btn",
+        "actions": [
+          "fold",
+          "call",
+          "raise"
+        ]
+      },
+      {
+        "info_set": "preflop_22_utg",
+        "actions": [
+          "fold",
+          "call",
+          "raise"
+        ]
+      },
+      {
+        "info_set": "flop_AK2_toppair",
+        "actions": [
+          "fold",
+          "call",
+          "bet"
+        ]
+      },
+      {
+        "info_set": "turn_AK2Q_toptwo",
+        "actions": [
+          "fold",
+          "call",
+          "bet"
+        ]
+      },
+      {
+        "info_set": "river_AK2Q5_bluff",
+        "actions": [
+          "fold",
+          "call",
+          "bet"
+        ]
+      }
+    ]
+  },
+  "patterns": {
+    "action_frequency": {
+      "fold": 0.33999999999999997,
+      "call": 0.21000000000000002,
+      "raise": 0.13999999999999999,
+      "bet": 0.31
+    },
+    "betting_rounds": {
+      "turn": 4,
+      "flop": 1
+    },
+    "strategy_summary": {},
+    "total_info_sets": 5,
+    "unique_actions": [
+      "fold",
+      "call",
+      "raise",
+      "bet"
+    ]
+  }
+}

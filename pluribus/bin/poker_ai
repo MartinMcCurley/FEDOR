@@ -1,6 +1,24 @@
 #!/usr/bin/env python
+import multiprocessing as mp
 from poker_ai.cli.runner import cli
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point with proper multiprocessing support."""
+    # Required for Windows multiprocessing
+    if hasattr(mp, 'freeze_support'):
+        mp.freeze_support()
+    
+    # Set spawn method for Windows compatibility
+    if hasattr(mp, 'set_start_method'):
+        try:
+            mp.set_start_method('spawn', force=True)
+        except RuntimeError:
+            # Already set, ignore
+            pass
+    
     cli()
+
+
+if __name__ == "__main__":
+    main()

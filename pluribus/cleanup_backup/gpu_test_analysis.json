@@ -1,0 +1,84 @@
+{
+  "structure": {
+    "type": "dict",
+    "size": 4,
+    "keys": [
+      "regret",
+      "timestep",
+      "strategy",
+      "pre_flop_strategy"
+    ],
+    "strategy_info": {
+      "type": "dict",
+      "num_info_sets": 12728
+    },
+    "sample_info_sets": [
+      {
+        "info_set": "{\"cards_cluster\":0,\"history\":[{\"pre_flop\":[\"call\",...",
+        "actions": [
+          "fold",
+          "call",
+          "raise",
+          "raise:lv2",
+          "raise:lv5",
+          "raise:lv50"
+        ]
+      },
+      {
+        "info_set": "{\"cards_cluster\":0,\"history\":[{\"pre_flop\":[\"call\",...",
+        "actions": [
+          "fold",
+          "call"
+        ]
+      },
+      {
+        "info_set": "{\"cards_cluster\":0,\"history\":[{\"pre_flop\":[\"call\",...",
+        "actions": [
+          "fold",
+          "call"
+        ]
+      },
+      {
+        "info_set": "{\"cards_cluster\":0,\"history\":[{\"pre_flop\":[\"call\",...",
+        "actions": [
+          "fold",
+          "call",
+          "raise",
+          "raise:lv2",
+          "raise:lv5",
+          "raise:lv50"
+        ]
+      },
+      {
+        "info_set": "{\"cards_cluster\":0,\"history\":[{\"pre_flop\":[\"call\",...",
+        "actions": [
+          "fold",
+          "call"
+        ]
+      }
+    ]
+  },
+  "patterns": {
+    "action_frequency": {
+      "fold": 0.16556267777046424,
+      "call": 0.28774063223871843,
+      "raise": 0.13913632740096984,
+      "raise:lv2": 0.13895321110072537,
+      "raise:lv5": 0.13605634399454766,
+      "raise:lv50": 0.1325508074945999
+    },
+    "betting_rounds": {
+      "river": 12728
+    },
+    "strategy_summary": {},
+    "total_info_sets": 12728,
+    "unique_actions": [
+      "fold",
+      "call",
+      "raise",
+      "raise:lv2",
+      "raise:lv5",
+      "raise:lv50"
+    ]
+  }
+}

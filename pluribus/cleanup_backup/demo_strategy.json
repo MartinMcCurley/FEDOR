@@ -1,0 +1,106 @@
+{
+  "pipeline_step": "json_conversion",
+  "source": "sample_strategy",
+  "decisions": [
+    {
+      "hand": "AKs",
+      "position": "btn",
+      "street": "preflop",
+      "situation": "Sample situation for AKs",
+      "actions": [
+        [
+          "raise",
+          0.7
+        ],
+        [
+          "call",
+          0.25
+        ],
+        [
+          "fold",
+          0.05
+        ]
+      ]
+    },
+    {
+      "hand": "22",
+      "position": "utg",
+      "street": "preflop",
+      "situation": "Sample situation for 22",
+      "actions": [
+        [
+          "fold",
+          0.8
+        ],
+        [
+          "call",
+          0.2
+        ]
+      ]
+    },
+    {
+      "hand": "AK2",
+      "position": "toppair",
+      "street": "flop",
+      "situation": "Sample situation for AK2",
+      "actions": [
+        [
+          "bet",
+          0.6
+        ],
+        [
+          "call",
+          0.3
+        ],
+        [
+          "fold",
+          0.1
+        ]
+      ]
+    },
+    {
+      "hand": "AK2Q",
+      "position": "toptwo",
+      "street": "turn",
+      "situation": "Sample situation for AK2Q",
+      "actions": [
+        [
+          "bet",
+          0.75
+        ],
+        [
+          "call",
+          0.2
+        ],
+        [
+          "fold",
+          0.05
+        ]
+      ]
+    },
+    {
+      "hand": "AK2Q5",
+      "position": "bluff",
+      "street": "river",
+      "situation": "Sample situation for AK2Q5",
+      "actions": [
+        [
+          "fold",
+          0.7
+        ],
+        [
+          "bet",
+          0.2
+        ],
+        [
+          "call",
+          0.1
+        ]
+      ]
+    }
+  ],
+  "metadata": {
+    "total_info_sets": 5,
+    "timestep": 1000
+  }
+}
